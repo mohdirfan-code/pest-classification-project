@@ -1,0 +1,147 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Agricultural Pest Detection Design System - All colors MUST be HSL */
+
+@layer base {
+  :root {
+    --background: 120 20% 97%;
+    --foreground: 120 10% 15%;
+
+    /* Agricultural color palette */
+    --agricultural-primary: 142 69% 58%;     /* Fresh green #22c55e */
+    --agricultural-primary-dark: 142 69% 45%; /* Darker green */
+    --agricultural-secondary: 32 95% 27%;    /* Earth brown #854d0e */
+    --agricultural-secondary-light: 32 45% 85%; /* Light brown */
+    
+    /* Functional colors */
+    --success: 142 76% 36%;     /* Success green */
+    --warning: 43 96% 56%;      /* Warning amber */
+    --danger: 0 84% 60%;        /* Danger red */
+    
+    /* Neutral palette */
+    --neutral-50: 120 20% 98%;
+    --neutral-100: 120 15% 95%;
+    --neutral-200: 120 10% 85%;
+    --neutral-300: 120 8% 70%;
+    --neutral-800: 120 10% 25%;
+    --neutral-900: 120 15% 15%;
+
+    /* Gradients */
+    --gradient-agricultural: linear-gradient(135deg, hsl(var(--agricultural-primary)), hsl(var(--agricultural-primary-dark)));
+    --gradient-earth: linear-gradient(135deg, hsl(var(--agricultural-secondary)), hsl(32 95% 35%));
+    --gradient-subtle: linear-gradient(180deg, hsl(var(--background)), hsl(120 15% 94%));
+
+    /* Shadows */
+    --shadow-soft: 0 4px 6px -1px hsl(var(--agricultural-primary) / 0.1);
+    --shadow-medium: 0 10px 15px -3px hsl(var(--agricultural-primary) / 0.1);
+    --shadow-agricultural: 0 8px 25px -5px hsl(var(--agricultural-primary) / 0.2);
+
+    /* Component-specific variables */
+    --card: 0 0% 100%;
+    --card-foreground: hsl(var(--foreground));
+
+    --popover: 0 0% 100%;
+    --popover-foreground: hsl(var(--foreground));
+
+    --primary: var(--agricultural-primary);
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: var(--agricultural-secondary-light);
+    --secondary-foreground: var(--agricultural-secondary);
+
+    --muted: var(--neutral-100);
+    --muted-foreground: var(--neutral-800);
+
+    --accent: var(--agricultural-primary);
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: var(--danger);
+    --destructive-foreground: 0 0% 100%;
+
+    --border: var(--neutral-200);
+    --input: var(--neutral-200);
+    --ring: var(--agricultural-primary);
+
+    --radius: 0.75rem;
+
+    /* Transitions */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .dark {
+    --background: 120 15% 8%;
+    --foreground: 120 10% 95%;
+    
+    --agricultural-primary: 142 69% 65%;
+    --agricultural-primary-dark: 142 69% 50%;
+    --agricultural-secondary: 32 95% 35%;
+    --agricultural-secondary-light: 32 45% 20%;
+
+    --card: 120 15% 10%;
+    --card-foreground: hsl(var(--foreground));
+
+    --popover: 120 15% 10%;
+    --popover-foreground: hsl(var(--foreground));
+
+    --primary: var(--agricultural-primary);
+    --primary-foreground: 120 15% 8%;
+
+    --secondary: var(--agricultural-secondary-light);
+    --secondary-foreground: 120 10% 95%;
+
+    --muted: 120 10% 15%;
+    --muted-foreground: 120 8% 70%;
+
+    --accent: var(--agricultural-primary);
+    --accent-foreground: 120 15% 8%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 120 10% 20%;
+    --input: 120 10% 20%;
+    --ring: var(--agricultural-primary);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  /* Custom agricultural components */
+  .agricultural-gradient {
+    background: var(--gradient-agricultural);
+  }
+  
+  .earth-gradient {
+    background: var(--gradient-earth);
+  }
+  
+  .subtle-gradient {
+    background: var(--gradient-subtle);
+  }
+  
+  .agricultural-shadow {
+    box-shadow: var(--shadow-agricultural);
+  }
+  
+  .upload-zone {
+    @apply border-2 border-dashed border-muted-foreground/30 rounded-xl p-8 transition-all duration-300 hover:border-primary hover:bg-primary/5;
+  }
+  
+  .upload-zone.dragover {
+    @apply border-primary bg-primary/10;
+  }
+}

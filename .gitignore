@@ -1,0 +1,21 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Data & Models (Do not upload large files to GitHub)
+/data/
+/models/
+*.pt
+*.h5
+
+# Frontend
+/frontend/node_modules/
+/frontend/dist/
+.DS_Store
+npm-debug.log
+
+# IDE and OS files
+.vscode/
+.idea/
+
