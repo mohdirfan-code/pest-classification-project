@@ -8,3 +8,5 @@ pandas
 Pillow
 scikit-learn
 requests
+google-generativeai
+python-dotenv
