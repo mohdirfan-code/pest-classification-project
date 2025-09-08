@@ -3,3 +3,6 @@ fastapi[all]
 uvicorn
 Pillow
 ultralytics==8.3.194
+requests 
+pdfplumber 
+pandas

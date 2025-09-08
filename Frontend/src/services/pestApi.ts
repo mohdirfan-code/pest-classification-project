@@ -19,11 +19,8 @@ export interface RecommendationResponse {
 }
 
 export class PestApiService {
-  // THIS IS THE KEY CHANGE:
-  // This line now reads the API URL from an environment variable,
-  // which we will set in Render. For local development, it defaults
-  // back to your local server.
-  private static baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+  // This URL points to your locally running FastAPI server
+  private static baseUrl = 'http://127.0.0.1:8000';
 
   static async predictPest(imageFile: File): Promise<PredictionResponse> {
     const formData = new FormData();
@@ -52,7 +49,7 @@ export class PestApiService {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+        const errorData = await response.json();
       throw new Error(errorData.detail || 'Recommendation failed');
     }
 
