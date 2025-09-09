@@ -1,4 +1,4 @@
-import torch, timm, io, os, re, requests
+import torch, timm, io, os, re
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -7,14 +7,9 @@ from torchvision import transforms
 from contextlib import asynccontextmanager
 import google.generativeai as genai
 from dotenv import load_dotenv
-from pathlib import Path
 
-# --- Configuration for Deployment ---
-MODEL_URL = os.environ.get("MODEL_URL", "PASTE_YOUR_MODEL_URL_HERE")
-# CORRECTED PATH: Use the writable /tmp directory on Render's free tier
-MODEL_DEST_PATH = Path("/tmp/model.pt")
-# The pesticide data is copied with the app, so this path is relative
-PESTICIDE_DATA_PATH = "data/Pesticides.csv"
+# --- Configuration for Local Development ---
+MODEL_PATH = "../../models/convnext_pestopia_LLRD_best.pt"
 NUM_CLASSES = 132
 IMG_SIZE = 224
 
@@ -30,41 +25,24 @@ class PestNameRequest(BaseModel):
 async def lifespan(app: FastAPI):
     print("--- Loading models ---")
     load_dotenv()
-    
     try:
         genai.configure(api_key=os.environ["GEMINI_API_KEY"])
         ml_models["gemini_model"] = genai.GenerativeModel('gemini-1.5-flash')
         print("✅ Gemini API configured successfully.")
     except Exception as e:
-        print(f"❌ ERROR: Could not configure Gemini API. Is GEMINI_API_KEY secret set? Error: {e}")
+        print(f"❌ ERROR: Could not configure Gemini API. Is .env file present? Error: {e}")
         ml_models["gemini_model"] = None
-
-    if not MODEL_DEST_PATH.exists():
-        print(f"Model not found at {MODEL_DEST_PATH}. Downloading from URL...")
-        try:
-            MODEL_DEST_PATH.parent.mkdir(parents=True, exist_ok=True) # Ensure /tmp exists
-            with requests.get(MODEL_URL, stream=True) as r:
-                r.raise_for_status()
-                with open(MODEL_DEST_PATH, "wb") as f:
-                    for chunk in r.iter_content(chunk_size=8192):
-                        f.write(chunk)
-            print("Model downloaded successfully.")
-        except Exception as e:
-            print(f"❌ ERROR: Failed to download model: {e}")
 
     model = timm.create_model('convnext_tiny_in22k', pretrained=False, num_classes=NUM_CLASSES)
     try:
-        model.load_state_dict(torch.load(MODEL_DEST_PATH, map_location=torch.device('cpu')))
-        pesticide_df = pd.read_csv("src/api/data/Pesticides.csv") # Path relative to root
-        pesticide_df.columns = ['Pest_Name', 'Pesticides']
-        ml_models["pesticide_data"] = pesticide_df.set_index('Pest_Name').to_dict()['Pesticides']
-    except Exception as e:
-        print(f"ERROR: Could not load a required file: {e}")
+        model.load_state_dict(torch.load(MODEL_PATH, map_location=torch.device('cpu')))
+    except FileNotFoundError:
+        print(f"ERROR: Local pest classifier not found at {MODEL_PATH}")
         ml_models["pest_classifier"] = None
         yield
         return
         
-    device = torch.device("cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device); model.eval()
     ml_models["pest_classifier"] = model
     ml_models["device"] = device
@@ -76,9 +54,9 @@ async def lifespan(app: FastAPI):
     ml_models.clear()
 
 app = FastAPI(title="Pest Classification API", lifespan=lifespan)
-
+origins = ["http://localhost:3000", "http://localhost:5173", "http://localhost:8080", "http://192.168.29.88:8080"]
 app.add_middleware(
-    CORSMiddleware, allow_origins=["*"], allow_credentials=True,
+    CORSMiddleware, allow_origins=origins, allow_credentials=True,
     allow_methods=["*"], allow_headers=["*"],
 )
 
@@ -90,7 +68,7 @@ data_transforms = transforms.Compose([
 
 @app.get("/")
 def home():
-    return {"message": "API is running."}
+    return {"message": "API is running. Go to /docs for interface."}
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
@@ -130,6 +108,7 @@ async def recommend(request: PestNameRequest):
         print(f"--- Generating recommendation for {pest_name} ---")
         response = await gemini_model.generate_content_async(prompt)
         text = response.text
+        
         def parse_section(header, content):
             try:
                 section_content = re.search(f'# {header}\n(.*?)(?=\n# |$)', content, re.DOTALL).group(1).strip()
@@ -147,6 +126,7 @@ async def recommend(request: PestNameRequest):
                     return solutions
                 else: return [clean_line(line) for line in lines]
             except: return []
+
         response_payload = {
             "pest_name": pest_name,
             "pest_info": re.search(r'# PEST INFO\n(.*?)(?=\n# |$)', text, re.DOTALL).group(1).strip() if re.search(r'# PEST INFO\n(.*?)(?=\n# |$)', text, re.DOTALL) else "Information not available.",
@@ -158,3 +138,4 @@ async def recommend(request: PestNameRequest):
     except Exception as e:
         print(f"❌ ERROR: Failed to generate or parse Gemini response: {e}")
         raise HTTPException(status_code=500, detail="Failed to get recommendation from AI service.")
+
