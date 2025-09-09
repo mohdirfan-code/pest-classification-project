@@ -19,4 +19,4 @@ npm-debug.log
 .vscode/
 .idea/
 
-.env
+src/api/.env
